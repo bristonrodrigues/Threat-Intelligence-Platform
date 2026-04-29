@@ -3,6 +3,7 @@ import joblib
 
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import StandardScaler
 
@@ -53,8 +54,10 @@ print("Dataset Split Completed")
 
 # STEP 6 — Create Random Forest Model
 
-model = RandomForestClassifier()
-
+model = RandomForestClassifier(
+    n_estimators=200,
+    random_state=42
+)
 print("Random Forest Model Created")
 
 
@@ -70,9 +73,9 @@ print("Model Training Completed")
 predictions = model.predict(X_test)
 
 accuracy = accuracy_score(y_test, predictions)
+print(classification_report(y_test, predictions))
 
-print("Model Accuracy:", accuracy)
-
+print("Model Accuracy:", round(accuracy * 100, 2), "%")
 
 # STEP 9 — Save ML Model
 
