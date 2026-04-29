@@ -5,7 +5,9 @@ from config import ABUSEIPDB_API_KEY
 from config import VT_API_KEY
 
 
+# =========================================
 # Severity Logic
+# =========================================
 
 def get_severity(score):
 
@@ -19,7 +21,31 @@ def get_severity(score):
         return "Low"
 
 
+# =========================================
+# Threat Classification Logic
+# =========================================
+
+def classify_threat(score):
+
+    if score >= 90:
+        return "Botnet"
+
+    elif score >= 75:
+        return "Malware"
+
+    elif score >= 60:
+        return "Phishing"
+
+    elif score >= 40:
+        return "Spam"
+
+    else:
+        return "Suspicious"
+
+
+# =========================================
 # IP Reputation Scanner
+# =========================================
 
 def check_ip(ip):
 
@@ -47,10 +73,13 @@ def check_ip(ip):
 
     severity = get_severity(score)
 
+    threat_type = classify_threat(score)
+
     return {
         "ip": data["data"]["ipAddress"],
         "threat_score": score,
         "severity": severity,
+        "threat_type": threat_type,
         "country": data["data"]["countryCode"],
         "isp": data["data"]["isp"],
         "domain": data["data"]["domain"],
@@ -59,7 +88,9 @@ def check_ip(ip):
     }
 
 
+# =========================================
 # URL Scanner
+# =========================================
 
 def scan_url(url):
 
@@ -92,7 +123,11 @@ def scan_url(url):
 
     reputation_score = harmless - malicious
 
-    severity = get_severity(malicious * 10)
+    score = malicious * 10
+
+    severity = get_severity(score)
+
+    threat_type = classify_threat(score)
 
     return {
         "url": url,
@@ -100,5 +135,6 @@ def scan_url(url):
         "suspicious": suspicious,
         "harmless": harmless,
         "reputation_score": reputation_score,
-        "severity": severity
+        "severity": severity,
+        "threat_type": threat_type
     }
