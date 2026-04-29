@@ -3,6 +3,8 @@ import base64
 
 from config import ABUSEIPDB_API_KEY
 from config import VT_API_KEY
+
+from database import save_threat
 def check_ip(ip):
 
     url = "https://api.abuseipdb.com/api/v2/check"
@@ -25,50 +27,31 @@ def check_ip(ip):
 
     data = response.json()
 
+    threat_score = data["data"]["abuseConfidenceScore"]
+
+    if threat_score >= 60:
+        severity = "High"
+
+    elif threat_score >= 20:
+        severity = "Medium"
+
+    else:
+        severity = "Low"
+
+    save_threat(
+        ip=ip,
+        url="N/A",
+        severity=severity,
+        threat_type="Malicious IP"
+    )
+
     return {
         "ip": data["data"]["ipAddress"],
-        "threat_score": data["data"]["abuseConfidenceScore"],
+        "threat_score": threat_score,
+        "severity": severity,
         "country": data["data"]["countryCode"],
         "isp": data["data"]["isp"],
         "domain": data["data"]["domain"],
         "usage_type": data["data"]["usageType"],
         "total_reports": data["data"]["totalReports"]
-    }
-def scan_url(url):
-
-    url_bytes = url.encode('utf-8')
-
-    url_id = base64.urlsafe_b64encode(
-        url_bytes
-    ).decode().strip("=")
-
-    endpoint = f"https://www.virustotal.com/api/v3/urls/{url_id}"
-
-    headers = {
-        "x-apikey": VT_API_KEY
-    }
-
-    response = requests.get(
-        endpoint,
-        headers=headers
-    )
-
-    data = response.json()
-
-    stats = data["data"]["attributes"]["last_analysis_stats"]
-
-    malicious = stats["malicious"]
-
-    suspicious = stats["suspicious"]
-
-    harmless = stats["harmless"]
-
-    reputation_score = harmless - malicious
-
-    return {
-        "url": url,
-        "malicious": malicious,
-        "suspicious": suspicious,
-        "harmless": harmless,
-        "reputation_score": reputation_score
     }
