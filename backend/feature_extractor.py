@@ -1,4 +1,5 @@
 from urllib.parse import urlparse
+import re
 
 
 def extract_features(url):
@@ -9,20 +10,13 @@ def extract_features(url):
 
         "url_length": len(url),
 
-        "valid_url": 1 if parsed.scheme and parsed.netloc else 0,
+        "valid_url": 1 if parsed.scheme else 0,
 
         "at_symbol": 1 if "@" in url else 0,
 
         "sensitive_words_count": sum(
             word in url.lower()
-            for word in [
-                "login",
-                "secure",
-                "account",
-                "bank",
-                "verify",
-                "update"
-            ]
+            for word in ["login", "secure", "bank", "verify", "account", "update"]
         ),
 
         "path_length": len(parsed.path),
@@ -37,11 +31,24 @@ def extract_features(url):
 
         "nb_or": url.count("|"),
 
-        "nb_www": 1 if "www" in url else 0,
+        "nb_www": url.lower().count("www"),
 
-        "nb_com": 1 if ".com" in url else 0,
+        "nb_com": url.lower().count(".com"),
 
-        "nb_underscore": url.count("_")
+        "nb_underscore": url.count("_"),
+
+        # 🔥 ADD THESE (VERY IMPORTANT)
+        "nb_digits": sum(c.isdigit() for c in url),
+
+        "nb_slash": url.count("/"),
+
+        "nb_question": url.count("?"),
+
+        "nb_equal": url.count("="),
+
+        "hostname_length": len(parsed.netloc),
+
+        "has_ip": 1 if re.match(r"\d+\.\d+\.\d+\.\d+", parsed.netloc) else 0
     }
 
     return features

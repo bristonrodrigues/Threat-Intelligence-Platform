@@ -2,42 +2,91 @@ import joblib
 import pandas as pd
 
 
-# Load Trained ML Model
+# LOAD MODEL
 
-model = joblib.load("../models/phishing_model.pkl")
+model = joblib.load(
+    "../models/phishing_model.pkl"
+)
 
 
-# Load Scaler
+# LOAD SCALER
 
-scaler = joblib.load("../models/scaler.pkl")
+scaler = joblib.load(
+    "../models/scaler.pkl"
+)
 
 
 def predict_url(features):
 
-    # Convert features into DataFrame
+    # 🔥 Convert DataFrame → dict
+    if isinstance(features, pd.DataFrame):
+        features = features.iloc[0].to_dict()
 
-    df = pd.DataFrame([features])
+    suspicious_score = 0
 
-    # Normalize features
+    if features['nb_hyphens'] > 2:
+        suspicious_score += 1
 
-    scaled_features = scaler.transform(df)
+    if features['nb_dots'] > 3:
+        suspicious_score += 1
 
-    # Predict
+    if features['at_symbol'] == 1:
+        suspicious_score += 1
 
-    prediction = model.predict(scaled_features)
+    if features['isHttps'] == 0:
+        suspicious_score += 1
 
-    # Return Result
+    if features['sensitive_words_count'] > 0:
+        suspicious_score += 2
 
-    if prediction[0] == 1:
+    if features['url_length'] > 75:
+        suspicious_score += 1
 
+    # 🚨 Rule-based detection
+    if suspicious_score >= 3:
         return {
             "prediction": "Phishing",
-            "risk_level": "High"
+            "risk_level": "High",
+            "threat_score": 90
         }
 
-    else:
+    # =========================
+    # ML PART
+    # =========================
 
+    # 🔥 ONLY TRAINED FEATURES
+    required_columns = [
+        "url_length",
+        "valid_url",
+        "at_symbol",
+        "sensitive_words_count",
+        "path_length",
+        "isHttps",
+        "nb_dots",
+        "nb_hyphens",
+        "nb_and",
+        "nb_or",
+        "nb_www",
+        "nb_com",
+        "nb_underscore"
+    ]
+
+    df = pd.DataFrame([features])[required_columns]
+
+    scaled_data = scaler.transform(df)
+
+    prediction = model.predict(scaled_data)
+
+    # Final decision
+    if prediction[0] == 0:
+        return {
+            "prediction": "Phishing",
+            "risk_level": "High",
+            "threat_score": 80
+        }
+    else:
         return {
             "prediction": "Safe",
-            "risk_level": "Low"
+            "risk_level": "Low",
+            "threat_score": 20
         }

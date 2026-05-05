@@ -1,37 +1,39 @@
+import time
+
+from sklearn.metrics import confusion_matrix
+
+from sklearn.metrics import classification_report
 import pandas as pd
 import joblib
 
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import StandardScaler
 
 
-# STEP 1 — Load Dataset
+# Load Dataset
 
 data = pd.read_csv("../datasets/phishing.csv")
 
-print("Dataset Loaded Successfully")
+print("Dataset Loaded")
 
 
-# STEP 2 — Remove Null Values
+# Remove Null Values
 
 data = data.dropna()
 
 print("Null Values Removed")
 
 
-# STEP 3 — Separate Features and Target
+# Features and Labels
 
-X = data.drop("target", axis=1)
+X = data.drop('target', axis=1)
 
-y = data["target"]
+y = data['target']
+print(data['target'].value_counts())
 
-print("Features and Target Separated")
-
-
-# STEP 4 — Normalize Features
+# Normalize Features
 
 scaler = StandardScaler()
 
@@ -40,7 +42,7 @@ X_scaled = scaler.fit_transform(X)
 print("Features Normalized")
 
 
-# STEP 5 — Split Dataset
+# Split Dataset
 
 X_train, X_test, y_train, y_test = train_test_split(
     X_scaled,
@@ -52,40 +54,69 @@ X_train, X_test, y_train, y_test = train_test_split(
 print("Dataset Split Completed")
 
 
-# STEP 6 — Create Random Forest Model
+# Train Model
 
-model = RandomForestClassifier(
-    n_estimators=200,
-    random_state=42
-)
-print("Random Forest Model Created")
-
-
-# STEP 7 — Train Model
+model = RandomForestClassifier()
 
 model.fit(X_train, y_train)
 
 print("Model Training Completed")
 
 
-# STEP 8 — Test Model
-
+# Test Accuracy
+start_time = time.time()
 predictions = model.predict(X_test)
+end_time = time.time()
+
+prediction_time = end_time - start_time
+
+print(
+    "Prediction Time:",
+    round(prediction_time, 4),
+    "seconds"
+)
 
 accuracy = accuracy_score(y_test, predictions)
-print(classification_report(y_test, predictions))
+print(
+    "Model Accuracy:",
+    round(accuracy * 100, 2),
+    "%"
+)
 
-print("Model Accuracy:", round(accuracy * 100, 2), "%")
+print("Accuracy:", round(accuracy * 100, 2), "%")
+print("\nClassification Report:\n")
 
-# STEP 9 — Save ML Model
+print(
+    classification_report(
+        y_test,
+        predictions
+    )
+)
+print("\nConfusion Matrix:\n")
 
-joblib.dump(model, "../models/phishing_model.pkl")
+print(
+    confusion_matrix(
+        y_test,
+        predictions
+    )
+)
 
-print("ML Model Saved Successfully")
+
+# Save Model
+
+joblib.dump(
+    model,
+    "../models/phishing_model.pkl"
+)
+
+print("Model Saved")
 
 
-# STEP 10 — Save Scaler
+# Save Scaler
 
-joblib.dump(scaler, "../models/scaler.pkl")
+joblib.dump(
+    scaler,
+    "../models/scaler.pkl"
+)
 
-print("Scaler Saved Successfully")
+print("Scaler Saved")
