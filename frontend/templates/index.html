@@ -1121,29 +1121,32 @@ L.tileLayer(
 
 async function loadAttackMap() {
 
-    const response = await fetch('/get_attack_map')
+    const response = await fetch('/api/threats')
     const attacks = await response.json()
 
     attacks.forEach(attack => {
 
+        // 🔥 RANDOM LOCATION (since DB has no lat/lon)
+        const lat = Math.random() * 140 - 70
+        const lon = Math.random() * 360 - 180
+
         const marker = L.circleMarker(
-            [attack.latitude, attack.longitude],
+            [lat, lon],
             {
                 radius: 8,
-                color: '#ef4444',
-                fillColor: '#ef4444',
+                color: attack.severity === "High" ? "red" : "green",
+                fillColor: attack.severity === "High" ? "red" : "green",
                 fillOpacity: 0.8
             }
         ).addTo(map)
 
         marker.bindPopup(`
             <b>IP:</b> ${attack.ip}<br>
-            <b>Country:</b> ${attack.country}<br>
+            <b>Threat:</b> ${attack.threat_type}<br>
             <b>Severity:</b> ${attack.severity}
         `)
     })
 }
-
 
 // ==============================
 // INITIAL LOAD (PATCHED)
